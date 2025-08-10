@@ -14,7 +14,7 @@ import { Terminal } from "../../../integrations/terminal/Terminal"
 import { arePathsEqual } from "../../../utils/path"
 import { FileContextTracker } from "../../context-tracking/FileContextTracker"
 import { ApiHandler } from "../../../api/index"
-import { ClineProvider } from "../../webview/ClineProvider"
+import { SheetsProvider } from "../../webview/SheetsProvider"
 import { RooIgnoreController } from "../../ignore/RooIgnoreController"
 import { formatResponse } from "../../prompts/responses"
 import { Task } from "../../task/Task"
@@ -115,7 +115,7 @@ describe("getEnvironmentDetails", () => {
 			providerRef: {
 				deref: vi.fn().mockReturnValue(mockProvider),
 				[Symbol.toStringTag]: "WeakRef",
-			} as unknown as WeakRef<ClineProvider>,
+			} as unknown as WeakRef<SheetsProvider>,
 		}
 
 		// Mock other dependencies.

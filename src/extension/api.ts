@@ -20,21 +20,21 @@ import {
 import { IpcServer } from "@roo-code/ipc"
 
 import { Package } from "../shared/package"
-import { ClineProvider } from "../core/webview/ClineProvider"
+import { SheetsProvider } from "../core/webview/SheetsProvider"
 import { openClineInNewTab } from "../activate/registerCommands"
 
 export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 	private readonly outputChannel: vscode.OutputChannel
-	private readonly sidebarProvider: ClineProvider
+	private readonly sidebarProvider: SheetsProvider
 	private readonly context: vscode.ExtensionContext
 	private readonly ipc?: IpcServer
-	private readonly taskMap = new Map<string, ClineProvider>()
+	private readonly taskMap = new Map<string, SheetsProvider>()
 	private readonly log: (...args: unknown[]) => void
 	private logfile?: string
 
 	constructor(
 		outputChannel: vscode.OutputChannel,
-		provider: ClineProvider,
+		provider: SheetsProvider,
 		socketPath?: string,
 		enableLogging = false,
 	) {
@@ -103,7 +103,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		images?: string[]
 		newTab?: boolean
 	}) {
-		let provider: ClineProvider
+		let provider: SheetsProvider
 
 		if (newTab) {
 			await vscode.commands.executeCommand("workbench.action.files.revert")
@@ -212,7 +212,7 @@ export class API extends EventEmitter<RooCodeEvents> implements RooCodeAPI {
 		return this.sidebarProvider.viewLaunched
 	}
 
-	private registerListeners(provider: ClineProvider) {
+	private registerListeners(provider: SheetsProvider) {
 		provider.on(RooCodeEventName.TaskCreated, (task) => {
 			// Task Lifecycle
 

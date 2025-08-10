@@ -8,9 +8,9 @@ import { SYSTEM_PROMPT } from "../prompts/system"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
 
-import { ClineProvider } from "./ClineProvider"
+import { SheetsProvider } from "./SheetsProvider"
 
-export const generateSystemPrompt = async (provider: ClineProvider, message: WebviewMessage) => {
+export const generateSystemPrompt = async (provider: SheetsProvider, message: WebviewMessage) => {
 	const {
 		apiConfiguration,
 		customModePrompts,

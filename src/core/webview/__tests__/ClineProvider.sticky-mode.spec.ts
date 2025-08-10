@@ -1,8 +1,8 @@
-// npx vitest core/webview/__tests__/ClineProvider.sticky-mode.spec.ts
+// npx vitest core/webview/__tests__/SheetsProvider.sticky-mode.spec.ts
 
 import * as vscode from "vscode"
 import { TelemetryService } from "@roo-code/telemetry"
-import { ClineProvider } from "../ClineProvider"
+import { SheetsProvider } from "../SheetsProvider"
 import { ContextProxy } from "../../config/ContextProxy"
 import { Task } from "../../task/Task"
 import type { HistoryItem, ProviderName } from "@roo-code/types"
@@ -168,8 +168,8 @@ vi.mock("@roo-code/telemetry", () => ({
 	},
 }))
 
-describe("ClineProvider - Sticky Mode", () => {
-	let provider: ClineProvider
+describe("SheetsProvider - Sticky Mode", () => {
+	let provider: SheetsProvider
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
 	let mockWebviewView: vscode.WebviewView
@@ -245,7 +245,7 @@ describe("ClineProvider - Sticky Mode", () => {
 			onDidChangeVisibility: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
 		} as unknown as vscode.WebviewView
 
-		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		provider = new SheetsProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 
 		// Mock getMcpHub method
 		provider.getMcpHub = vi.fn().mockReturnValue({

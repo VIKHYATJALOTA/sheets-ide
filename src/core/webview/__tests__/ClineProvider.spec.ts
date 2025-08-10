@@ -1,4 +1,4 @@
-// npx vitest core/webview/__tests__/ClineProvider.spec.ts
+// npx vitest core/webview/__tests__/SheetsProvider.spec.ts
 
 import Anthropic from "@anthropic-ai/sdk"
 import * as vscode from "vscode"
@@ -15,7 +15,7 @@ import { ContextProxy } from "../../config/ContextProxy"
 import { Task, TaskOptions } from "../../task/Task"
 import { safeWriteJson } from "../../../utils/safeWriteJson"
 
-import { ClineProvider } from "../ClineProvider"
+import { SheetsProvider } from "../SheetsProvider"
 
 // Mock setup must come before imports
 vi.mock("../../prompts/sections/custom-instructions")
@@ -330,10 +330,10 @@ afterAll(() => {
 	vi.restoreAllMocks()
 })
 
-describe("ClineProvider", () => {
+describe("SheetsProvider", () => {
 	let defaultTaskOptions: TaskOptions
 
-	let provider: ClineProvider
+	let provider: SheetsProvider
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
 	let mockWebviewView: vscode.WebviewView
@@ -412,7 +412,7 @@ describe("ClineProvider", () => {
 			onDidChangeVisibility: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
 		} as unknown as vscode.WebviewView
 
-		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		provider = new SheetsProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 
 		defaultTaskOptions = {
 			provider,
@@ -438,11 +438,11 @@ describe("ClineProvider", () => {
 	})
 
 	test("constructor initializes correctly", () => {
-		expect(provider).toBeInstanceOf(ClineProvider)
+		expect(provider).toBeInstanceOf(SheetsProvider)
 		// Since getVisibleInstance returns the last instance where view.visible is true
 		// @ts-ignore - accessing private property for testing
 		provider.view = mockWebviewView
-		expect(ClineProvider.getVisibleInstance()).toBe(provider)
+		expect(SheetsProvider.getVisibleInstance()).toBe(provider)
 	})
 
 	test("resolveWebviewView sets up webview correctly", async () => {
@@ -457,7 +457,7 @@ describe("ClineProvider", () => {
 	})
 
 	test("resolveWebviewView sets up webview correctly in development mode even if local server is not running", async () => {
-		provider = new ClineProvider(
+		provider = new SheetsProvider(
 			{ ...mockContext, extensionMode: vscode.ExtensionMode.Development },
 			mockOutputChannel,
 			"sidebar",
@@ -1140,7 +1140,7 @@ describe("ClineProvider", () => {
 		} as unknown as vscode.ExtensionContext
 
 		// Create new provider with updated mock context
-		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		provider = new SheetsProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 		await provider.resolveWebviewView(mockWebviewView)
 		const messageHandler = (mockWebviewView.webview.onDidReceiveMessage as any).mock.calls[0][0]
 
@@ -2208,7 +2208,7 @@ describe("ClineProvider", () => {
 })
 
 describe("Project MCP Settings", () => {
-	let provider: ClineProvider
+	let provider: SheetsProvider
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
 	let mockWebviewView: vscode.WebviewView
@@ -2260,7 +2260,7 @@ describe("Project MCP Settings", () => {
 			onDidChangeVisibility: vi.fn(),
 		} as unknown as vscode.WebviewView
 
-		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		provider = new SheetsProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 	})
 
 	test.skip("handles openProjectMcpSettings message", async () => {
@@ -2344,7 +2344,7 @@ describe("Project MCP Settings", () => {
 })
 
 describe.skip("ContextProxy integration", () => {
-	let provider: ClineProvider
+	let provider: SheetsProvider
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
 	let mockContextProxy: any
@@ -2368,7 +2368,7 @@ describe.skip("ContextProxy integration", () => {
 
 		mockOutputChannel = { appendLine: vi.fn() } as unknown as vscode.OutputChannel
 		mockContextProxy = new ContextProxy(mockContext)
-		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", mockContextProxy)
+		provider = new SheetsProvider(mockContext, mockOutputChannel, "sidebar", mockContextProxy)
 	})
 
 	test("updateGlobalState uses contextProxy", async () => {
@@ -2400,7 +2400,7 @@ describe.skip("ContextProxy integration", () => {
 
 describe("getTelemetryProperties", () => {
 	let defaultTaskOptions: TaskOptions
-	let provider: ClineProvider
+	let provider: SheetsProvider
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
 	let mockCline: any
@@ -2432,7 +2432,7 @@ describe("getTelemetryProperties", () => {
 		} as unknown as vscode.ExtensionContext
 
 		mockOutputChannel = { appendLine: vi.fn() } as unknown as vscode.OutputChannel
-		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		provider = new SheetsProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 
 		defaultTaskOptions = {
 			provider,
@@ -2559,8 +2559,8 @@ describe("getTelemetryProperties", () => {
 	})
 })
 
-describe("ClineProvider - Router Models", () => {
-	let provider: ClineProvider
+describe("SheetsProvider - Router Models", () => {
+	let provider: SheetsProvider
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
 	let mockWebviewView: vscode.WebviewView
@@ -2623,7 +2623,7 @@ describe("ClineProvider - Router Models", () => {
 			TelemetryService.createInstance([])
 		}
 
-		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		provider = new SheetsProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 	})
 
 	test("handles requestRouterModels with successful responses", async () => {
@@ -2871,8 +2871,8 @@ describe("ClineProvider - Router Models", () => {
 	})
 })
 
-describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
-	let provider: ClineProvider
+describe("SheetsProvider - Comprehensive Edit/Delete Edge Cases", () => {
+	let provider: SheetsProvider
 	let mockContext: vscode.ExtensionContext
 	let mockOutputChannel: vscode.OutputChannel
 	let mockWebviewView: vscode.WebviewView
@@ -2941,7 +2941,7 @@ describe("ClineProvider - Comprehensive Edit/Delete Edge Cases", () => {
 			onDidChangeVisibility: vi.fn().mockImplementation(() => ({ dispose: vi.fn() })),
 		} as unknown as vscode.WebviewView
 
-		provider = new ClineProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
+		provider = new SheetsProvider(mockContext, mockOutputChannel, "sidebar", new ContextProxy(mockContext))
 
 		defaultTaskOptions = {
 			provider,

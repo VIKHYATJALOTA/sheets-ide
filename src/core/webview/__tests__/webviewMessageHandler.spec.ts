@@ -4,14 +4,14 @@ import type { Mock } from "vitest"
 vi.mock("../../../api/providers/fetchers/modelCache")
 
 import { webviewMessageHandler } from "../webviewMessageHandler"
-import type { ClineProvider } from "../ClineProvider"
+import type { SheetsProvider } from "../SheetsProvider"
 import { getModels } from "../../../api/providers/fetchers/modelCache"
 import type { ModelRecord } from "../../../shared/api"
 
 const mockGetModels = getModels as Mock<typeof getModels>
 
-// Mock ClineProvider
-const mockClineProvider = {
+// Mock SheetsProvider
+const mockSheetsProvider = {
 	getState: vi.fn(),
 	postMessageToWebview: vi.fn(),
 	customModesManager: {
@@ -36,7 +36,7 @@ const mockClineProvider = {
 	getTaskWithId: vi.fn(),
 	initClineWithHistoryItem: vi.fn(),
 	getMcpHub: vi.fn(),
-} as unknown as ClineProvider
+} as unknown as SheetsProvider
 
 import { t } from "../../../i18n"
 
@@ -98,7 +98,7 @@ vi.mock("../../../utils/globalContext")
 describe("webviewMessageHandler - requestLmStudioModels", () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mockClineProvider.getState = vi.fn().mockResolvedValue({
+		mockSheetsProvider.getState = vi.fn().mockResolvedValue({
 			apiConfiguration: {
 				lmStudioModelId: "model-1",
 				lmStudioBaseUrl: "http://localhost:1234",
@@ -124,13 +124,13 @@ describe("webviewMessageHandler - requestLmStudioModels", () => {
 
 		mockGetModels.mockResolvedValue(mockModels)
 
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "requestLmStudioModels",
 		})
 
 		expect(mockGetModels).toHaveBeenCalledWith({ provider: "lmstudio", baseUrl: "http://localhost:1234" })
 
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "lmStudioModels",
 			lmStudioModels: mockModels,
 		})
@@ -140,7 +140,7 @@ describe("webviewMessageHandler - requestLmStudioModels", () => {
 describe("webviewMessageHandler - requestRouterModels", () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
-		mockClineProvider.getState = vi.fn().mockResolvedValue({
+		mockSheetsProvider.getState = vi.fn().mockResolvedValue({
 			apiConfiguration: {
 				openRouterApiKey: "openrouter-key",
 				requestyApiKey: "requesty-key",
@@ -170,7 +170,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 
 		mockGetModels.mockResolvedValue(mockModels)
 
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "requestRouterModels",
 		})
 
@@ -186,7 +186,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 		})
 
 		// Verify response was sent
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "routerModels",
 			routerModels: {
 				openrouter: mockModels,
@@ -201,7 +201,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 	})
 
 	it("handles LiteLLM models with values from message when config is missing", async () => {
-		mockClineProvider.getState = vi.fn().mockResolvedValue({
+		mockSheetsProvider.getState = vi.fn().mockResolvedValue({
 			apiConfiguration: {
 				openRouterApiKey: "openrouter-key",
 				requestyApiKey: "requesty-key",
@@ -222,7 +222,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 
 		mockGetModels.mockResolvedValue(mockModels)
 
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "requestRouterModels",
 			values: {
 				litellmApiKey: "message-litellm-key",
@@ -239,7 +239,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 	})
 
 	it("skips LiteLLM when both config and message values are missing", async () => {
-		mockClineProvider.getState = vi.fn().mockResolvedValue({
+		mockSheetsProvider.getState = vi.fn().mockResolvedValue({
 			apiConfiguration: {
 				openRouterApiKey: "openrouter-key",
 				requestyApiKey: "requesty-key",
@@ -260,7 +260,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 
 		mockGetModels.mockResolvedValue(mockModels)
 
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "requestRouterModels",
 			// No values provided
 		})
@@ -273,7 +273,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 		)
 
 		// Verify response includes empty object for LiteLLM
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "routerModels",
 			routerModels: {
 				openrouter: mockModels,
@@ -305,12 +305,12 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound
 			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm
 
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "requestRouterModels",
 		})
 
 		// Verify successful providers are included
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "routerModels",
 			routerModels: {
 				openrouter: mockModels,
@@ -324,21 +324,21 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 		})
 
 		// Verify error messages were sent for failed providers
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
 			error: "Requesty API error",
 			values: { provider: "requesty" },
 		})
 
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
 			error: "Unbound API error",
 			values: { provider: "unbound" },
 		})
 
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
 			error: "LiteLLM connection failed",
@@ -355,40 +355,40 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 			.mockRejectedValueOnce(new Error("Unbound API error")) // unbound
 			.mockRejectedValueOnce(new Error("LiteLLM connection failed")) // litellm
 
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "requestRouterModels",
 		})
 
 		// Verify error handling for different error types
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
 			error: "Structured error message",
 			values: { provider: "openrouter" },
 		})
 
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
 			error: "Requesty API error",
 			values: { provider: "requesty" },
 		})
 
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
 			error: "Glama API error",
 			values: { provider: "glama" },
 		})
 
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
 			error: "Unbound API error",
 			values: { provider: "unbound" },
 		})
 
-		expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+		expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 			type: "singleRouterModelFetchResponse",
 			success: false,
 			error: "LiteLLM connection failed",
@@ -400,7 +400,7 @@ describe("webviewMessageHandler - requestRouterModels", () => {
 		const mockModels: ModelRecord = {}
 		mockGetModels.mockResolvedValue(mockModels)
 
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "requestRouterModels",
 			values: {
 				litellmApiKey: "message-key",
@@ -429,7 +429,7 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 		const slug = "test-project-mode"
 		const rulesFolderPath = path.join("/mock/workspace", ".roo", `rules-${slug}`)
 
-		vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([
+		vi.mocked(mockSheetsProvider.customModesManager.getCustomModes).mockResolvedValue([
 			{
 				name: "Test Project Mode",
 				slug,
@@ -439,13 +439,13 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 			} as ModeConfig,
 		])
 		vi.mocked(fsUtils.fileExistsAtPath).mockResolvedValue(true)
-		vi.mocked(mockClineProvider.customModesManager.deleteCustomMode).mockResolvedValue(undefined)
+		vi.mocked(mockSheetsProvider.customModesManager.deleteCustomMode).mockResolvedValue(undefined)
 
-		await webviewMessageHandler(mockClineProvider, { type: "deleteCustomMode", slug })
+		await webviewMessageHandler(mockSheetsProvider, { type: "deleteCustomMode", slug })
 
 		// The confirmation dialog is now handled in the webview, so we don't expect showInformationMessage to be called
 		expect(vscode.window.showInformationMessage).not.toHaveBeenCalled()
-		expect(mockClineProvider.customModesManager.deleteCustomMode).toHaveBeenCalledWith(slug)
+		expect(mockSheetsProvider.customModesManager.deleteCustomMode).toHaveBeenCalledWith(slug)
 		expect(fs.rm).toHaveBeenCalledWith(rulesFolderPath, { recursive: true, force: true })
 	})
 
@@ -454,7 +454,7 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 		const homeDir = os.homedir()
 		const rulesFolderPath = path.join(homeDir, ".roo", `rules-${slug}`)
 
-		vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([
+		vi.mocked(mockSheetsProvider.customModesManager.getCustomModes).mockResolvedValue([
 			{
 				name: "Test Global Mode",
 				slug,
@@ -464,19 +464,19 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 			} as ModeConfig,
 		])
 		vi.mocked(fsUtils.fileExistsAtPath).mockResolvedValue(true)
-		vi.mocked(mockClineProvider.customModesManager.deleteCustomMode).mockResolvedValue(undefined)
+		vi.mocked(mockSheetsProvider.customModesManager.deleteCustomMode).mockResolvedValue(undefined)
 
-		await webviewMessageHandler(mockClineProvider, { type: "deleteCustomMode", slug })
+		await webviewMessageHandler(mockSheetsProvider, { type: "deleteCustomMode", slug })
 
 		// The confirmation dialog is now handled in the webview, so we don't expect showInformationMessage to be called
 		expect(vscode.window.showInformationMessage).not.toHaveBeenCalled()
-		expect(mockClineProvider.customModesManager.deleteCustomMode).toHaveBeenCalledWith(slug)
+		expect(mockSheetsProvider.customModesManager.deleteCustomMode).toHaveBeenCalledWith(slug)
 		expect(fs.rm).toHaveBeenCalledWith(rulesFolderPath, { recursive: true, force: true })
 	})
 
 	it("should only delete the mode when rules folder does not exist", async () => {
 		const slug = "test-mode-no-rules"
-		vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([
+		vi.mocked(mockSheetsProvider.customModesManager.getCustomModes).mockResolvedValue([
 			{
 				name: "Test Mode No Rules",
 				slug,
@@ -486,13 +486,13 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 			} as ModeConfig,
 		])
 		vi.mocked(fsUtils.fileExistsAtPath).mockResolvedValue(false)
-		vi.mocked(mockClineProvider.customModesManager.deleteCustomMode).mockResolvedValue(undefined)
+		vi.mocked(mockSheetsProvider.customModesManager.deleteCustomMode).mockResolvedValue(undefined)
 
-		await webviewMessageHandler(mockClineProvider, { type: "deleteCustomMode", slug })
+		await webviewMessageHandler(mockSheetsProvider, { type: "deleteCustomMode", slug })
 
 		// The confirmation dialog is now handled in the webview, so we don't expect showInformationMessage to be called
 		expect(vscode.window.showInformationMessage).not.toHaveBeenCalled()
-		expect(mockClineProvider.customModesManager.deleteCustomMode).toHaveBeenCalledWith(slug)
+		expect(mockSheetsProvider.customModesManager.deleteCustomMode).toHaveBeenCalledWith(slug)
 		expect(fs.rm).not.toHaveBeenCalled()
 	})
 
@@ -501,7 +501,7 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 		const rulesFolderPath = path.join("/mock/workspace", ".roo", `rules-${slug}`)
 		const error = new Error("Permission denied")
 
-		vi.mocked(mockClineProvider.customModesManager.getCustomModes).mockResolvedValue([
+		vi.mocked(mockSheetsProvider.customModesManager.getCustomModes).mockResolvedValue([
 			{
 				name: "Test Mode Error",
 				slug,
@@ -511,12 +511,12 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 			} as ModeConfig,
 		])
 		vi.mocked(fsUtils.fileExistsAtPath).mockResolvedValue(true)
-		vi.mocked(mockClineProvider.customModesManager.deleteCustomMode).mockResolvedValue(undefined)
+		vi.mocked(mockSheetsProvider.customModesManager.deleteCustomMode).mockResolvedValue(undefined)
 		vi.mocked(fs.rm).mockRejectedValue(error)
 
-		await webviewMessageHandler(mockClineProvider, { type: "deleteCustomMode", slug })
+		await webviewMessageHandler(mockSheetsProvider, { type: "deleteCustomMode", slug })
 
-		expect(mockClineProvider.customModesManager.deleteCustomMode).toHaveBeenCalledWith(slug)
+		expect(mockSheetsProvider.customModesManager.deleteCustomMode).toHaveBeenCalledWith(slug)
 		expect(fs.rm).toHaveBeenCalledWith(rulesFolderPath, { recursive: true, force: true })
 		// Verify error message is shown to the user
 		expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
@@ -526,7 +526,7 @@ describe("webviewMessageHandler - deleteCustomMode", () => {
 			}),
 		)
 		// No error response is sent anymore - we just continue with deletion
-		expect(mockClineProvider.postMessageToWebview).not.toHaveBeenCalled()
+		expect(mockSheetsProvider.postMessageToWebview).not.toHaveBeenCalled()
 	})
 })
 
@@ -534,25 +534,25 @@ describe("webviewMessageHandler - message dialog preferences", () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		// Mock a current Cline instance
-		vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue({
+		vi.mocked(mockSheetsProvider.getCurrentCline).mockReturnValue({
 			taskId: "test-task-id",
 			apiConversationHistory: [],
 			clineMessages: [],
 		} as any)
 		// Reset getValue mock
-		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(false)
+		vi.mocked(mockSheetsProvider.contextProxy.getValue).mockReturnValue(false)
 	})
 
 	describe("deleteMessage", () => {
 		it("should always show dialog for delete confirmation", async () => {
-			vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue({} as any) // Mock current cline exists
+			vi.mocked(mockSheetsProvider.getCurrentCline).mockReturnValue({} as any) // Mock current cline exists
 
-			await webviewMessageHandler(mockClineProvider, {
+			await webviewMessageHandler(mockSheetsProvider, {
 				type: "deleteMessage",
 				value: 123456789, // Changed from messageTs to value
 			})
 
-			expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 				type: "showDeleteMessageDialog",
 				messageTs: 123456789,
 			})
@@ -561,15 +561,15 @@ describe("webviewMessageHandler - message dialog preferences", () => {
 
 	describe("submitEditedMessage", () => {
 		it("should always show dialog for edit confirmation", async () => {
-			vi.mocked(mockClineProvider.getCurrentCline).mockReturnValue({} as any) // Mock current cline exists
+			vi.mocked(mockSheetsProvider.getCurrentCline).mockReturnValue({} as any) // Mock current cline exists
 
-			await webviewMessageHandler(mockClineProvider, {
+			await webviewMessageHandler(mockSheetsProvider, {
 				type: "submitEditedMessage",
 				value: 123456789, // messageTs as number
 				editedMessageContent: "edited content", // text content in editedMessageContent field
 			})
 
-			expect(mockClineProvider.postMessageToWebview).toHaveBeenCalledWith({
+			expect(mockSheetsProvider.postMessageToWebview).toHaveBeenCalledWith({
 				type: "showEditMessageDialog",
 				messageTs: 123456789,
 				text: "edited content",
@@ -590,137 +590,137 @@ describe("webviewMessageHandler - mcpEnabled", () => {
 		}
 
 		// Mock the getMcpHub method to return our mock McpHub
-		mockClineProvider.getMcpHub = vi.fn().mockReturnValue(mockMcpHub)
+		mockSheetsProvider.getMcpHub = vi.fn().mockReturnValue(mockMcpHub)
 
 		// Reset the contextProxy getValue mock
-		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(undefined)
+		vi.mocked(mockSheetsProvider.contextProxy.getValue).mockReturnValue(undefined)
 	})
 
 	it("should not refresh MCP servers when value does not change (true to true)", async () => {
 		// Setup: mcpEnabled is already true
-		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(true)
+		vi.mocked(mockSheetsProvider.contextProxy.getValue).mockReturnValue(true)
 
 		// Act: Send mcpEnabled message with same value
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "mcpEnabled",
 			bool: true,
 		})
 
 		// Assert: handleMcpEnabledChange should not be called
 		expect(mockMcpHub.handleMcpEnabledChange).not.toHaveBeenCalled()
-		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", true)
-		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+		expect(mockSheetsProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", true)
+		expect(mockSheetsProvider.postStateToWebview).toHaveBeenCalled()
 	})
 
 	it("should not refresh MCP servers when value does not change (false to false)", async () => {
 		// Setup: mcpEnabled is already false
-		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(false)
+		vi.mocked(mockSheetsProvider.contextProxy.getValue).mockReturnValue(false)
 
 		// Act: Send mcpEnabled message with same value
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "mcpEnabled",
 			bool: false,
 		})
 
 		// Assert: handleMcpEnabledChange should not be called
 		expect(mockMcpHub.handleMcpEnabledChange).not.toHaveBeenCalled()
-		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", false)
-		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+		expect(mockSheetsProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", false)
+		expect(mockSheetsProvider.postStateToWebview).toHaveBeenCalled()
 	})
 
 	it("should refresh MCP servers when value changes from true to false", async () => {
 		// Setup: mcpEnabled is true
-		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(true)
+		vi.mocked(mockSheetsProvider.contextProxy.getValue).mockReturnValue(true)
 
 		// Act: Send mcpEnabled message with false
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "mcpEnabled",
 			bool: false,
 		})
 
 		// Assert: handleMcpEnabledChange should be called
 		expect(mockMcpHub.handleMcpEnabledChange).toHaveBeenCalledWith(false)
-		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", false)
-		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+		expect(mockSheetsProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", false)
+		expect(mockSheetsProvider.postStateToWebview).toHaveBeenCalled()
 	})
 
 	it("should refresh MCP servers when value changes from false to true", async () => {
 		// Setup: mcpEnabled is false
-		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(false)
+		vi.mocked(mockSheetsProvider.contextProxy.getValue).mockReturnValue(false)
 
 		// Act: Send mcpEnabled message with true
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "mcpEnabled",
 			bool: true,
 		})
 
 		// Assert: handleMcpEnabledChange should be called
 		expect(mockMcpHub.handleMcpEnabledChange).toHaveBeenCalledWith(true)
-		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", true)
-		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+		expect(mockSheetsProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", true)
+		expect(mockSheetsProvider.postStateToWebview).toHaveBeenCalled()
 	})
 
 	it("should handle undefined values with defaults correctly", async () => {
 		// Setup: mcpEnabled is undefined (defaults to true)
-		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(undefined)
+		vi.mocked(mockSheetsProvider.contextProxy.getValue).mockReturnValue(undefined)
 
 		// Act: Send mcpEnabled message with undefined (defaults to true)
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "mcpEnabled",
 			bool: undefined,
 		})
 
 		// Assert: Should use default value (true) and not trigger refresh since both are true
-		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", true)
+		expect(mockSheetsProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", true)
 		expect(mockMcpHub.handleMcpEnabledChange).not.toHaveBeenCalled()
-		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+		expect(mockSheetsProvider.postStateToWebview).toHaveBeenCalled()
 	})
 
 	it("should handle when mcpEnabled changes from undefined to false", async () => {
 		// Setup: mcpEnabled is undefined (defaults to true)
-		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(undefined)
+		vi.mocked(mockSheetsProvider.contextProxy.getValue).mockReturnValue(undefined)
 
 		// Act: Send mcpEnabled message with false
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "mcpEnabled",
 			bool: false,
 		})
 
 		// Assert: Should trigger refresh since undefined defaults to true and we're changing to false
-		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", false)
+		expect(mockSheetsProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", false)
 		expect(mockMcpHub.handleMcpEnabledChange).toHaveBeenCalledWith(false)
-		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+		expect(mockSheetsProvider.postStateToWebview).toHaveBeenCalled()
 	})
 
 	it("should not call handleMcpEnabledChange when McpHub is not available", async () => {
 		// Setup: No McpHub instance available
-		mockClineProvider.getMcpHub = vi.fn().mockReturnValue(null)
-		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(true)
+		mockSheetsProvider.getMcpHub = vi.fn().mockReturnValue(null)
+		vi.mocked(mockSheetsProvider.contextProxy.getValue).mockReturnValue(true)
 
 		// Act: Send mcpEnabled message with false
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "mcpEnabled",
 			bool: false,
 		})
 
 		// Assert: State should be updated but handleMcpEnabledChange should not be called
-		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", false)
-		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+		expect(mockSheetsProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", false)
+		expect(mockSheetsProvider.postStateToWebview).toHaveBeenCalled()
 		// No error should be thrown
 	})
 
 	it("should always update state even when value doesn't change", async () => {
 		// Setup: mcpEnabled is true
-		vi.mocked(mockClineProvider.contextProxy.getValue).mockReturnValue(true)
+		vi.mocked(mockSheetsProvider.contextProxy.getValue).mockReturnValue(true)
 
 		// Act: Send mcpEnabled message with same value
-		await webviewMessageHandler(mockClineProvider, {
+		await webviewMessageHandler(mockSheetsProvider, {
 			type: "mcpEnabled",
 			bool: true,
 		})
 
 		// Assert: State should still be updated to ensure consistency
-		expect(mockClineProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", true)
-		expect(mockClineProvider.postStateToWebview).toHaveBeenCalled()
+		expect(mockSheetsProvider.contextProxy.setValue).toHaveBeenCalledWith("mcpEnabled", true)
+		expect(mockSheetsProvider.postStateToWebview).toHaveBeenCalled()
 	})
 })

@@ -80,7 +80,7 @@ import { RooProtectedController } from "../protect/RooProtectedController"
 import { type AssistantMessageContent, presentAssistantMessage, parseAssistantMessage } from "../assistant-message"
 import { AssistantMessageParser } from "../assistant-message/AssistantMessageParser"
 import { truncateConversationIfNeeded } from "../sliding-window"
-import { ClineProvider } from "../webview/ClineProvider"
+import { SheetsProvider } from "../webview/SheetsProvider"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import { MultiFileSearchReplaceDiffStrategy } from "../diff/strategies/multi-file-search-replace"
 import { readApiMessages, saveApiMessages, readTaskMessages, saveTaskMessages, taskMetadata } from "../task-persistence"
@@ -103,7 +103,7 @@ import { AutoApprovalHandler } from "./AutoApprovalHandler"
 const MAX_EXPONENTIAL_BACKOFF_SECONDS = 600 // 10 minutes
 
 export type TaskOptions = {
-	provider: ClineProvider
+	provider: SheetsProvider
 	apiConfiguration: ProviderSettings
 	enableDiff?: boolean
 	enableCheckpoints?: boolean
@@ -174,7 +174,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	 */
 	private taskModeReady: Promise<void>
 
-	providerRef: WeakRef<ClineProvider>
+	providerRef: WeakRef<SheetsProvider>
 	private readonly globalStoragePath: string
 	abort: boolean = false
 	blockingAsk?: BlockingAsk
@@ -376,10 +376,10 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	 * All errors result in fallback to `defaultModeSlug` to ensure task can proceed.
 	 *
 	 * @private
-	 * @param provider - The ClineProvider instance to fetch state from
+	 * @param provider - The SheetsProvider instance to fetch state from
 	 * @returns Promise that resolves when initialization is complete
 	 */
-	private async initializeTaskMode(provider: ClineProvider): Promise<void> {
+	private async initializeTaskMode(provider: SheetsProvider): Promise<void> {
 		try {
 			const state = await provider.getState()
 			this._taskMode = state?.mode || defaultModeSlug

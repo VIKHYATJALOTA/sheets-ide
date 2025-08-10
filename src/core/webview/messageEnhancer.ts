@@ -3,7 +3,7 @@ import { TelemetryService } from "@roo-code/telemetry"
 import { supportPrompt } from "../../shared/support-prompt"
 import { singleCompletionHandler } from "../../utils/single-completion-handler"
 import { ProviderSettingsManager } from "../config/ProviderSettingsManager"
-import { ClineProvider } from "./ClineProvider"
+import { SheetsProvider } from "./SheetsProvider"
 
 export interface MessageEnhancerOptions {
 	text: string
