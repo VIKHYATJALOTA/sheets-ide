@@ -3,12 +3,59 @@
  * AI-powered Google Sheets automation add-on
  */
 
-// Configuration - Add your API keys here
+// Configuration - Now supports user-provided API keys
 const CONFIG = {
-  ANTHROPIC_API_KEY: PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY') || 'your-anthropic-api-key-here',
-  OPENAI_API_KEY: PropertiesService.getScriptProperties().getProperty('OPENAI_API_KEY') || 'your-openai-api-key-here',
   AI_PROVIDER: 'anthropic' // 'anthropic' or 'openai'
 };
+
+// API Key Management - Users can provide their own keys
+function getApiKey(provider, userProvidedKey = null) {
+  // First check if user provided a key in this session
+  if (userProvidedKey) {
+    return userProvidedKey;
+  }
+  
+  // Then check user properties (per-user storage)
+  const userProperties = PropertiesService.getUserProperties();
+  const userKey = provider === 'anthropic' ?
+    userProperties.getProperty('USER_ANTHROPIC_API_KEY') :
+    userProperties.getProperty('USER_OPENAI_API_KEY');
+  
+  if (userKey) {
+    return userKey;
+  }
+  
+  // Finally check script properties (developer fallback)
+  const scriptProperties = PropertiesService.getScriptProperties();
+  const scriptKey = provider === 'anthropic' ?
+    scriptProperties.getProperty('ANTHROPIC_API_KEY') :
+    scriptProperties.getProperty('OPENAI_API_KEY');
+  
+  return scriptKey || null;
+}
+
+// Store user API key
+function storeUserApiKey(provider, apiKey) {
+  const userProperties = PropertiesService.getUserProperties();
+  const propertyName = provider === 'anthropic' ? 'USER_ANTHROPIC_API_KEY' : 'USER_OPENAI_API_KEY';
+  userProperties.setProperty(propertyName, apiKey);
+  return true;
+}
+
+// Check if user has API key configured
+function hasUserApiKey(provider) {
+  const userProperties = PropertiesService.getUserProperties();
+  const propertyName = provider === 'anthropic' ? 'USER_ANTHROPIC_API_KEY' : 'USER_OPENAI_API_KEY';
+  return !!userProperties.getProperty(propertyName);
+}
+
+// Clear user API key
+function clearUserApiKey(provider) {
+  const userProperties = PropertiesService.getUserProperties();
+  const propertyName = provider === 'anthropic' ? 'USER_ANTHROPIC_API_KEY' : 'USER_OPENAI_API_KEY';
+  userProperties.deleteProperty(propertyName);
+  return true;
+}
 
 function onHomepage() {
   // This function runs when the add-on is opened
@@ -212,8 +259,23 @@ function getSelectedRange() {
  * AI Integration Functions
  */
 
-function processAIRequest(userMessage) {
+function processAIRequest(userMessage, userApiKey = null) {
   try {
+    // Check for API key setup commands
+    if (userMessage.toLowerCase().includes('set api key') || userMessage.toLowerCase().includes('configure api key')) {
+      return handleApiKeySetup(userMessage);
+    }
+    
+    // Check if API key is available
+    const apiKey = getApiKey(CONFIG.AI_PROVIDER, userApiKey);
+    if (!apiKey) {
+      return {
+        success: false,
+        error: 'API key not configured. Please provide your API key by typing: "Set my Anthropic API key: your-key-here" or "Set my OpenAI API key: your-key-here"',
+        needsApiKey: true
+      };
+    }
+    
     // Get current spreadsheet context
     const context = getCurrentSpreadsheetContext();
     
@@ -221,7 +283,7 @@ function processAIRequest(userMessage) {
     const prompt = createAIPrompt(userMessage, context);
     
     // Call AI API
-    const aiResponse = callAI(prompt);
+    const aiResponse = callAI(prompt, apiKey);
     
     // Parse AI response and execute actions
     const actions = parseAIResponse(aiResponse);
@@ -240,6 +302,46 @@ function processAIRequest(userMessage) {
     return {
       success: false,
       error: error.toString()
+    };
+  }
+}
+
+function handleApiKeySetup(userMessage) {
+  try {
+    const message = userMessage.toLowerCase();
+    
+    // Extract API key from message
+    let provider, apiKey;
+    
+    if (message.includes('anthropic')) {
+      provider = 'anthropic';
+      const match = userMessage.match(/anthropic api key[:\s]+([a-zA-Z0-9\-_]+)/i);
+      apiKey = match ? match[1] : null;
+    } else if (message.includes('openai')) {
+      provider = 'openai';
+      const match = userMessage.match(/openai api key[:\s]+([a-zA-Z0-9\-_]+)/i);
+      apiKey = match ? match[1] : null;
+    }
+    
+    if (!provider || !apiKey) {
+      return {
+        success: false,
+        error: 'Please provide your API key in the format: "Set my Anthropic API key: your-key-here" or "Set my OpenAI API key: your-key-here"'
+      };
+    }
+    
+    // Store the API key
+    storeUserApiKey(provider, apiKey);
+    
+    return {
+      success: true,
+      message: `✅ ${provider.charAt(0).toUpperCase() + provider.slice(1)} API key has been saved securely. You can now use Sheets IDE! Try asking me to help with your spreadsheet.`,
+      apiKeyConfigured: true
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Failed to save API key: ' + error.toString()
     };
   }
 }
@@ -311,12 +413,12 @@ Respond with a JSON object containing:
   return `${systemPrompt}\n\nUser Request: ${userMessage}`;
 }
 
-function callAI(prompt) {
+function callAI(prompt, apiKey) {
   try {
     if (CONFIG.AI_PROVIDER === 'anthropic') {
-      return callAnthropicAPI(prompt);
+      return callAnthropicAPI(prompt, apiKey);
     } else if (CONFIG.AI_PROVIDER === 'openai') {
-      return callOpenAIAPI(prompt);
+      return callOpenAIAPI(prompt, apiKey);
     } else {
       throw new Error('Invalid AI provider configured');
     }
@@ -326,12 +428,12 @@ function callAI(prompt) {
   }
 }
 
-function callAnthropicAPI(prompt) {
+function callAnthropicAPI(prompt, apiKey) {
   const response = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': CONFIG.ANTHROPIC_API_KEY,
+      'x-api-key': apiKey,
       'anthropic-version': '2023-06-01'
     },
     payload: JSON.stringify({
@@ -355,12 +457,12 @@ function callAnthropicAPI(prompt) {
   return data.content[0].text;
 }
 
-function callOpenAIAPI(prompt) {
+function callOpenAIAPI(prompt, apiKey) {
   const response = UrlFetchApp.fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+      'Authorization': `Bearer ${apiKey}`
     },
     payload: JSON.stringify({
       model: 'gpt-4',
