@@ -10,14 +10,14 @@ import type {
 	OrganizationAllowList,
 	CloudUserInfo,
 	ShareVisibility,
-} from "@roo-code/types"
+	MarketplaceItem,
+} from "./types"
 
 import { GitCommit } from "../utils/git"
 
 import { McpServer } from "./mcp"
 import { Mode } from "./modes"
 import { ModelRecord, RouterModels } from "./api"
-import type { MarketplaceItem } from "@roo-code/types"
 
 // Command interface for frontend/backend communication
 export interface Command {
@@ -121,6 +121,12 @@ export interface ExtensionMessage {
 		| "showEditMessageDialog"
 		| "commands"
 		| "insertTextIntoTextarea"
+		| "spreadsheetSelected"
+		| "rangeSelected"
+		| "sheetsOperationPreview"
+		| "sheetsOperationResult"
+		| "spreadsheetList"
+		| "sheetData"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
 	action?:
@@ -271,6 +277,7 @@ export type ExtensionState = Pick<
 	| "profileThresholds"
 	| "includeDiagnosticMessages"
 	| "maxDiagnosticMessages"
+	| "organizationAllowList"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
@@ -323,6 +330,10 @@ export type ExtensionState = Pick<
 	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
 	profileThresholds: Record<string, number>
 	hasOpenedModeSelector: boolean
+	// Sheets IDE specific state
+	selectedSpreadsheetId?: string
+	selectedSpreadsheetName?: string
+	selectedRange?: string
 }
 
 export interface ClineSayTool {

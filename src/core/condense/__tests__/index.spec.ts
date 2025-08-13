@@ -2,8 +2,6 @@
 
 import type { Mock } from "vitest"
 
-import { TelemetryService } from "@roo-code/telemetry"
-
 import { ApiHandler } from "../../../api"
 import { ApiMessage } from "../../task-persistence/apiMessages"
 import { maybeRemoveImageBlocks } from "../../../api/transform/image-cleaning"

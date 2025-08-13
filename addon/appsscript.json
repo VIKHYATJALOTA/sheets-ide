@@ -25,9 +25,6 @@
     "sheets": {
       "homepageTrigger": {
         "runFunction": "onHomepage"
-      },
-      "onSelectionChange": {
-        "runFunction": "onSelectionChange"
       }
     }
   },

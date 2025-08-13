@@ -14,9 +14,7 @@ import {
 	providerSettingsSchema,
 	globalSettingsSchema,
 	isSecretStateKey,
-} from "@roo-code/types"
-import { TelemetryService } from "@roo-code/telemetry"
-
+} from "../../shared/types.ts"
 import { logger } from "../../utils/logging"
 
 type GlobalStateKey = keyof GlobalState

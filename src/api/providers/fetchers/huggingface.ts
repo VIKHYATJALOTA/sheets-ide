@@ -6,7 +6,7 @@ import {
 	HUGGINGFACE_CACHE_DURATION,
 	HUGGINGFACE_DEFAULT_MAX_TOKENS,
 	HUGGINGFACE_DEFAULT_CONTEXT_WINDOW,
-} from "@roo-code/types"
+} from "../../../shared/types.ts"
 import type { ModelRecord } from "../../../shared/api"
 
 /**

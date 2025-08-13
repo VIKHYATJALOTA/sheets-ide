@@ -30,10 +30,7 @@ import {
 	getModelId,
 	DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
 	isBlockingAsk,
-} from "@roo-code/types"
-import { TelemetryService } from "@roo-code/telemetry"
-import { CloudService } from "@roo-code/cloud"
-
+} from "../../shared/types.ts"
 // api
 import { ApiHandler, ApiHandlerCreateMessageMetadata, buildApiHandler } from "../../api"
 import { ApiStream } from "../../api/transform/stream"

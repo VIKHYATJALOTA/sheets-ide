@@ -1,4 +1,4 @@
-import { moonshotModels, moonshotDefaultModelId } from "@roo-code/types"
+import { moonshotModels, moonshotDefaultModelId } from "../../shared/types.ts"
 
 import type { ApiHandlerOptions } from "../../shared/api"
 

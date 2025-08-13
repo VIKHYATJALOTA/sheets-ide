@@ -7,8 +7,8 @@ import type {
 	InstallMarketplaceItemOptions,
 	MarketplaceItem,
 	ShareVisibility,
-} from "@roo-code/types"
-import { marketplaceItemSchema } from "@roo-code/types"
+} from "./types"
+// Remove the invalid import
 
 import { Mode } from "./modes"
 
@@ -210,6 +210,18 @@ export interface WebviewMessage {
 		| "deleteCommand"
 		| "createCommand"
 		| "insertTextIntoTextarea"
+		| "selectSpreadsheet"
+		| "selectRange"
+		| "previewSheetsOperation"
+		| "executeSheetsOperation"
+		| "requestSpreadsheetList"
+		| "requestSheetData"
+		| "spreadsheetSelected"
+		| "rangeSelected"
+		| "sheetsOperationPreview"
+		| "sheetsOperationResult"
+		| "spreadsheetList"
+		| "sheetData"
 	text?: string
 	editedMessageContent?: string
 	tab?: "settings" | "history" | "mcp" | "modes" | "chat" | "marketplace" | "account"
@@ -272,6 +284,12 @@ export interface WebviewMessage {
 		codebaseIndexGeminiApiKey?: string
 		codebaseIndexMistralApiKey?: string
 	}
+	// Sheets IDE specific properties
+	spreadsheetId?: string
+	spreadsheetName?: string
+	range?: string
+	operation?: string
+	params?: any
 }
 
 export const checkoutDiffPayloadSchema = z.object({
@@ -300,6 +318,17 @@ export interface IndexClearedPayload {
 	success: boolean
 	error?: string
 }
+
+// Create a proper Zod schema for marketplace items
+const marketplaceItemSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	description: z.string(),
+	type: z.enum(["mcp", "mode", "tool"]),
+	author: z.string(),
+	version: z.string(),
+	tags: z.array(z.string()),
+})
 
 export const installMarketplaceItemWithParametersPayloadSchema = z.object({
 	item: marketplaceItemSchema,

@@ -1,7 +1,6 @@
 // npx vitest core/webview/__tests__/SheetsProvider.sticky-mode.spec.ts
 
 import * as vscode from "vscode"
-import { TelemetryService } from "@roo-code/telemetry"
 import { SheetsProvider } from "../SheetsProvider"
 import { ContextProxy } from "../../config/ContextProxy"
 import { Task } from "../../task/Task"

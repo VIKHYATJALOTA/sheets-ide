@@ -1,8 +1,6 @@
 import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 
-import { TelemetryService } from "@roo-code/telemetry"
-
 import { Task } from "../task/Task"
 
 import { getWorkspacePath } from "../../utils/path"

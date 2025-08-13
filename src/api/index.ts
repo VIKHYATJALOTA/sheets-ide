@@ -1,6 +1,19 @@
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { ProviderSettings, ModelInfo } from "../shared/types"
 
-import type { ProviderSettings, ModelInfo } from "@roo-code/types"
+// Create local Anthropic types to avoid dependency
+namespace Anthropic {
+	export namespace Messages {
+		export interface MessageParam {
+			role: 'user' | 'assistant'
+			content: string | Array<{ type: string; text?: string; [key: string]: any }>
+		}
+		export interface ContentBlockParam {
+			type: string
+			text?: string
+			[key: string]: any
+		}
+	}
+}
 
 import { ApiStream } from "./transform/stream"
 
@@ -117,7 +130,7 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 		case "groq":
 			return new GroqHandler(options)
 		case "huggingface":
-			return new HuggingFaceHandler(options)
+			return new HuggingFaceHandler(options) as ApiHandler
 		case "chutes":
 			return new ChutesHandler(options)
 		case "litellm":

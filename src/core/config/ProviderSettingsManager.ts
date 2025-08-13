@@ -9,9 +9,7 @@ import {
 	isSecretStateKey,
 	ProviderSettingsEntry,
 	DEFAULT_CONSECUTIVE_MISTAKE_LIMIT,
-} from "@roo-code/types"
-import { TelemetryService } from "@roo-code/telemetry"
-
+} from "../../shared/types.ts"
 import { Mode, modes } from "../../shared/modes"
 
 export interface SyncCloudProfilesResult {

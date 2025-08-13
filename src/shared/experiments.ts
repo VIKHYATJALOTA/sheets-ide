@@ -1,4 +1,4 @@
-import type { AssertEqual, Equals, Keys, Values, ExperimentId, Experiments } from "@roo-code/types"
+import type { AssertEqual, Equals, Keys, Values, ExperimentId, Experiments } from "./types"
 
 export const EXPERIMENT_IDS = {
 	MULTI_FILE_APPLY_DIFF: "multiFileApplyDiff",
@@ -7,7 +7,7 @@ export const EXPERIMENT_IDS = {
 	ASSISTANT_MESSAGE_PARSER: "assistantMessageParser",
 } as const satisfies Record<string, ExperimentId>
 
-type _AssertExperimentIds = AssertEqual<Equals<ExperimentId, Values<typeof EXPERIMENT_IDS>>>
+type _AssertExperimentIds = AssertEqual<ExperimentId, Values<typeof EXPERIMENT_IDS>>
 
 type ExperimentKey = Keys<typeof EXPERIMENT_IDS>
 

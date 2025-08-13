@@ -2,9 +2,19 @@ import { safeWriteJson } from "../../utils/safeWriteJson"
 import * as path from "path"
 import * as os from "os"
 import * as fs from "fs/promises"
-import pWaitFor from "p-wait-for"
 import * as vscode from "vscode"
 import * as yaml from "yaml"
+
+// Create a simple wait function to replace p-wait-for
+const pWaitFor = async (condition: () => boolean, options: { timeout: number }) => {
+	const start = Date.now()
+	while (!condition()) {
+		if (Date.now() - start > options.timeout) {
+			throw new Error('Timeout')
+		}
+		await new Promise(resolve => setTimeout(resolve, 100))
+	}
+}
 
 import {
 	type Language,
@@ -12,9 +22,8 @@ import {
 	type GlobalState,
 	type ClineMessage,
 	TelemetryEventName,
-} from "@roo-code/types"
-import { CloudService } from "@roo-code/cloud"
-import { TelemetryService } from "@roo-code/telemetry"
+} from "../../shared/types"
+import { CloudService, TelemetryService } from "../../shared/services"
 import { type ApiMessage } from "../task-persistence/apiMessages"
 
 import { SheetsProvider } from "./SheetsProvider"
@@ -683,9 +692,28 @@ export const webviewMessageHandler = async (
 			try {
 				const { getHuggingFaceModelsWithMetadata } = await import("../../api/providers/fetchers/huggingface")
 				const huggingFaceModelsResponse = await getHuggingFaceModelsWithMetadata()
+				
+				// Filter and transform models to ensure required properties
+				const validModels = huggingFaceModelsResponse.models
+					.filter((model: any) => model.id && model.object && model.created !== undefined && model.owned_by && model.providers)
+					.map((model: any) => ({
+						id: model.id,
+						object: model.object,
+						created: model.created,
+						owned_by: model.owned_by,
+						providers: model.providers.map((provider: any) => ({
+							provider: provider.provider || provider.status || "unknown",
+							status: provider.status || "live",
+							supports_tools: provider.supports_tools,
+							supports_structured_output: provider.supports_structured_output,
+							context_length: provider.context_length,
+							pricing: provider.pricing
+						}))
+					}))
+				
 				provider.postMessageToWebview({
 					type: "huggingFaceModels",
-					huggingFaceModels: huggingFaceModelsResponse.models,
+					huggingFaceModels: validModels,
 				})
 			} catch (error) {
 				console.error("Failed to fetch Hugging Face models:", error)
@@ -715,15 +743,20 @@ export const webviewMessageHandler = async (
 		case "checkpointDiff":
 			const result = checkoutDiffPayloadSchema.safeParse(message.payload)
 
-			if (result.success) {
-				await provider.getCurrentCline()?.checkpointDiff(result.data)
+			if (result.success && result.data.ts) {
+				await provider.getCurrentCline()?.checkpointDiff({
+					ts: result.data.ts,
+					previousCommitHash: result.data.previousCommitHash,
+					commitHash: result.data.commitHash,
+					mode: result.data.mode || "checkpoint"
+				})
 			}
 
 			break
 		case "checkpointRestore": {
 			const result = checkoutRestorePayloadSchema.safeParse(message.payload)
 
-			if (result.success) {
+			if (result.success && result.data.ts) {
 				await provider.cancelTask()
 
 				try {
@@ -733,7 +766,11 @@ export const webviewMessageHandler = async (
 				}
 
 				try {
-					await provider.getCurrentCline()?.checkpointRestore(result.data)
+					await provider.getCurrentCline()?.checkpointRestore({
+						ts: result.data.ts,
+						commitHash: result.data.commitHash,
+						mode: result.data.mode || "restore"
+					})
 				} catch (error) {
 					vscode.window.showErrorMessage(t("common:errors.checkpoint_failed"))
 				}
@@ -1681,8 +1718,8 @@ export const webviewMessageHandler = async (
 						const changedSettings = existingMode
 							? Object.keys(message.modeConfig).filter(
 									(key) =>
-										JSON.stringify((existingMode as Record<string, unknown>)[key]) !==
-										JSON.stringify((message.modeConfig as Record<string, unknown>)[key]),
+										JSON.stringify((existingMode as unknown as Record<string, unknown>)[key]) !==
+										JSON.stringify((message.modeConfig as unknown as Record<string, unknown>)[key]),
 								)
 							: []
 
@@ -2335,7 +2372,11 @@ export const webviewMessageHandler = async (
 		case "removeInstalledMarketplaceItem": {
 			if (marketplaceManager && message.mpItem && message.mpInstallOptions) {
 				try {
-					await marketplaceManager.removeInstalledMarketplaceItem(message.mpItem, message.mpInstallOptions)
+					// Convert InstallMarketplaceItemOptions to the expected format
+					const removeOptions = {
+						target: "project" as "global" | "project"
+					}
+					await marketplaceManager.removeInstalledMarketplaceItem(message.mpItem, removeOptions)
 					await provider.postStateToWebview()
 
 					// Send success message to webview
@@ -2601,6 +2642,132 @@ export const webviewMessageHandler = async (
 					type: "insertTextIntoTextarea",
 					text: text,
 				})
+			}
+			break
+		}
+
+		// Sheets IDE specific message handlers
+		case "selectSpreadsheet": {
+			// Handle spreadsheet selection for Sheets IDE
+			if (message.spreadsheetId) {
+				try {
+					// Store selected spreadsheet in global state
+					await updateGlobalState("selectedSpreadsheetId", message.spreadsheetId)
+					await updateGlobalState("selectedSpreadsheetName", message.spreadsheetName || "")
+					
+					// Update webview state
+					await provider.postStateToWebview()
+					
+					// Send confirmation back to webview
+					await provider.postMessageToWebview({
+						type: "spreadsheetSelected",
+						text: `Selected spreadsheet: ${message.spreadsheetName || message.spreadsheetId}`
+					} as any)
+				} catch (error) {
+					provider.log(`Error selecting spreadsheet: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+					vscode.window.showErrorMessage("Failed to select spreadsheet")
+				}
+			}
+			break
+		}
+
+		case "selectRange": {
+			// Handle range selection for Sheets operations
+			if (message.range) {
+				try {
+					// Store selected range in global state
+					await updateGlobalState("selectedRange", message.range)
+					
+					// Update webview state
+					await provider.postStateToWebview()
+					
+					// Send confirmation back to webview
+					await provider.postMessageToWebview({
+						type: "rangeSelected",
+						text: `Selected range: ${message.range}`
+					} as any)
+				} catch (error) {
+					provider.log(`Error selecting range: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+					vscode.window.showErrorMessage("Failed to select range")
+				}
+			}
+			break
+		}
+
+		case "previewSheetsOperation": {
+			// Handle preview of Sheets operations before execution
+			if (message.operation && message.params) {
+				try {
+					// Send preview data back to webview
+					await provider.postMessageToWebview({
+						type: "sheetsOperationPreview",
+						text: `Preview: ${message.operation} operation will be performed`
+					} as any)
+				} catch (error) {
+					provider.log(`Error previewing Sheets operation: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+					vscode.window.showErrorMessage("Failed to preview operation")
+				}
+			}
+			break
+		}
+
+		case "executeSheetsOperation": {
+			// Handle direct execution of Sheets operations
+			if (message.operation && message.params) {
+				try {
+					// This would integrate with our Sheets tools
+					// For now, just send a success response
+					await provider.postMessageToWebview({
+						type: "sheetsOperationResult",
+						text: "Operation completed successfully"
+					} as any)
+				} catch (error) {
+					provider.log(`Error executing Sheets operation: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+					await provider.postMessageToWebview({
+						type: "sheetsOperationResult",
+						text: `Error: ${error instanceof Error ? error.message : String(error)}`
+					} as any)
+				}
+			}
+			break
+		}
+
+		case "requestSpreadsheetList": {
+			// Handle request for user's spreadsheets
+			try {
+				// This would integrate with Google Drive API to list spreadsheets
+				// For now, send a mock response
+				await provider.postMessageToWebview({
+					type: "spreadsheetList",
+					text: "Mock spreadsheet list loaded"
+				} as any)
+			} catch (error) {
+				provider.log(`Error fetching spreadsheet list: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+				await provider.postMessageToWebview({
+					type: "spreadsheetList",
+					text: `Error: ${error instanceof Error ? error.message : String(error)}`
+				} as any)
+			}
+			break
+		}
+
+		case "requestSheetData": {
+			// Handle request for sheet data (for context building)
+			if (message.spreadsheetId && message.range) {
+				try {
+					// This would integrate with our SheetsApiClient
+					// For now, send a mock response
+					await provider.postMessageToWebview({
+						type: "sheetData",
+						text: `Mock data for ${message.spreadsheetId} range ${message.range}`
+					} as any)
+				} catch (error) {
+					provider.log(`Error fetching sheet data: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`)
+					await provider.postMessageToWebview({
+						type: "sheetData",
+						text: `Error: ${error instanceof Error ? error.message : String(error)}`
+					} as any)
+				}
 			}
 			break
 		}

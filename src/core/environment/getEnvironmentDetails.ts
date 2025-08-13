@@ -6,7 +6,7 @@ import pWaitFor from "p-wait-for"
 import delay from "delay"
 
 import type { ExperimentId } from "@roo-code/types"
-import { DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT } from "@roo-code/types"
+import { DEFAULT_TERMINAL_OUTPUT_CHARACTER_LIMIT } from "../../shared/types.ts"
 
 import { EXPERIMENT_IDS, experiments as Experiments } from "../../shared/experiments"
 import { formatLanguage } from "../../shared/language"

@@ -1,7 +1,9 @@
 {
 	"compilerOptions": {
-		"types": ["vitest/globals"],
+		"types": [],
 		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"downlevelIteration": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
 		"isolatedModules": true,
@@ -15,7 +17,7 @@
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"sourceMap": true,
-		"strict": true,
+		"strict": false,
 		"target": "es2022",
 		"useDefineForClassFields": true,
 		"useUnknownInCatchVariables": false

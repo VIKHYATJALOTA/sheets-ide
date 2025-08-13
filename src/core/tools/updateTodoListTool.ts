@@ -4,7 +4,7 @@ import { formatResponse } from "../prompts/responses"
 
 import cloneDeep from "clone-deep"
 import crypto from "crypto"
-import { TodoItem, TodoStatus, todoStatusSchema } from "@roo-code/types"
+import { TodoItem, TodoStatus, todoStatusSchema } from "../../shared/types.ts"
 import { getLatestTodo } from "../../shared/todo"
 
 let approvedTodoList: TodoItem[] | undefined = undefined

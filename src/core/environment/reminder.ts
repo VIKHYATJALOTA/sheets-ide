@@ -1,4 +1,4 @@
-import { TodoItem, TodoStatus } from "@roo-code/types"
+import { TodoItem, TodoStatus } from "../../shared/types.ts"
 
 /**
  * Format the reminders section as a markdown block in English, with basic instructions.

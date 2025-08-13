@@ -1,8 +1,21 @@
-import { Anthropic } from "@anthropic-ai/sdk"
+import type { ClineAsk, ToolProgressStatus, ToolGroup, ToolName } from "./types"
 
-import type { ClineAsk, ToolProgressStatus, ToolGroup, ToolName } from "@roo-code/types"
+// Define basic content block types without Anthropic dependency
+export interface TextBlockParam {
+	type: "text"
+	text: string
+}
 
-export type ToolResponse = string | Array<Anthropic.TextBlockParam | Anthropic.ImageBlockParam>
+export interface ImageBlockParam {
+	type: "image"
+	source: {
+		type: "base64"
+		media_type: string
+		data: string
+	}
+}
+
+export type ToolResponse = string | Array<TextBlockParam | ImageBlockParam>
 
 export type AskApproval = (
 	type: ClineAsk,
@@ -190,10 +203,37 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	search_and_replace: "search and replace",
 	codebase_search: "codebase search",
 	update_todo_list: "update todo list",
+	// Sheets IDE specific tools
+	read_range: "read spreadsheet ranges",
+	write_range: "write to spreadsheet ranges",
+	create_sheet: "create new sheets",
+	set_formula: "set formulas",
+	format_cells: "format cells",
 } as const
 
 // Define available tool groups.
 export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
+	file: {
+		tools: ["read_file", "write_to_file", "list_files"],
+	},
+	search: {
+		tools: ["search_files", "list_code_definition_names", "codebase_search"],
+	},
+	execute: {
+		tools: ["execute_command"],
+	},
+	browser: {
+		tools: ["browser_action"],
+	},
+	mcp: {
+		tools: ["use_mcp_tool", "access_mcp_resource"],
+	},
+	task: {
+		tools: ["ask_followup_question", "attempt_completion", "update_todo_list"],
+	},
+	sheets: {
+		tools: ["read_range", "write_range", "create_sheet", "set_formula", "format_cells"],
+	},
 	read: {
 		tools: [
 			"read_file",
@@ -207,14 +247,8 @@ export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	edit: {
 		tools: ["apply_diff", "write_to_file", "insert_content", "search_and_replace"],
 	},
-	browser: {
-		tools: ["browser_action"],
-	},
 	command: {
 		tools: ["execute_command"],
-	},
-	mcp: {
-		tools: ["use_mcp_tool", "access_mcp_resource"],
 	},
 	modes: {
 		tools: ["switch_mode", "new_task"],

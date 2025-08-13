@@ -1,4 +1,4 @@
-import { deepSeekModels, deepSeekDefaultModelId } from "@roo-code/types"
+import { deepSeekModels, deepSeekDefaultModelId } from "../../shared/types.ts"
 
 import type { ApiHandlerOptions } from "../../shared/api"
 

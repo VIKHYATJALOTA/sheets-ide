@@ -237,23 +237,40 @@
       function processMessage(message) {
         showLoading(true);
         
-        // Simulate AI processing (will be replaced with actual AI integration)
-        setTimeout(() => {
-          let response = '';
+        // Call the AI backend
+        google.script.run
+          .withSuccessHandler(handleAIResponse)
+          .withFailureHandler(handleAIError)
+          .processAIRequest(message);
+      }
+      
+      function handleAIResponse(response) {
+        showLoading(false);
+        
+        if (response.success) {
+          // Display AI message
+          addMessage(response.message, 'ai');
           
-          if (message.toLowerCase().includes('create') && message.toLowerCase().includes('sheet')) {
-            response = '✅ I understand you want to create a new sheet. In the full implementation, I would:\n\n1. Create a new sheet with the specified name\n2. Set up any requested headers or structure\n3. Apply basic formatting\n\nThis feature is coming soon!';
-          } else if (message.toLowerCase().includes('format') || message.toLowerCase().includes('bold')) {
-            response = '🎨 I can help with formatting! In the full implementation, I would:\n\n1. Select the specified range\n2. Apply the requested formatting (bold, colors, borders)\n3. Show you a preview before applying\n\nThis feature is coming soon!';
-          } else if (message.toLowerCase().includes('formula') || message.toLowerCase().includes('sum')) {
-            response = '🧮 I can help with formulas! In the full implementation, I would:\n\n1. Analyze your data structure\n2. Insert the appropriate formula\n3. Verify the calculation is correct\n\nThis feature is coming soon!';
-          } else {
-            response = `💡 I understand you want to: "${message}"\n\nIn the full Sheets IDE implementation, I would analyze your request, break it down into steps, and execute the appropriate Google Sheets operations automatically.\n\nThis is currently a preview - the full AI integration is coming soon!`;
+          // Show action results if any
+          if (response.results && response.results.length > 0) {
+            let resultSummary = '\n\n📋 Actions completed:\n';
+            response.results.forEach(result => {
+              if (result.result.success) {
+                resultSummary += `✅ ${result.action}: ${result.result.message || 'Success'}\n`;
+              } else {
+                resultSummary += `❌ ${result.action}: ${result.result.error}\n`;
+              }
+            });
+            addMessage(resultSummary, 'ai');
           }
-          
-          addMessage(response, 'ai');
-          showLoading(false);
-        }, 1500);
+        } else {
+          addMessage(`❌ Error: ${response.error}`, 'ai');
+        }
+      }
+      
+      function handleAIError(error) {
+        showLoading(false);
+        addMessage(`❌ Failed to process request: ${error.message}`, 'ai');
       }
       
       // Allow Enter key to send message

@@ -9,7 +9,7 @@ import {
 	type ToolGroup,
 	type PromptComponent,
 	DEFAULT_MODES,
-} from "@roo-code/types"
+} from "./types"
 
 import { addCustomInstructions } from "../core/prompts/sections/custom-instructions"
 
@@ -176,8 +176,8 @@ export function isToolAllowedForMode(
 	if (ALWAYS_AVAILABLE_TOOLS.includes(tool as any)) {
 		return true
 	}
-	if (experiments && Object.values(EXPERIMENT_IDS).includes(tool as ExperimentId)) {
-		if (!experiments[tool]) {
+	if (experiments && Object.values(EXPERIMENT_IDS).includes(tool as any)) {
+		if (!experiments[tool as keyof typeof experiments]) {
 			return false
 		}
 	}
@@ -187,9 +187,6 @@ export function isToolAllowedForMode(
 		if (tool in toolRequirements && !toolRequirements[tool]) {
 			return false
 		}
-	} else if (toolRequirements === false) {
-		// If toolRequirements is a boolean false, all tools are disabled
-		return false
 	}
 
 	const mode = getModeBySlug(modeSlug, customModes)
@@ -198,9 +195,9 @@ export function isToolAllowedForMode(
 	}
 
 	// Check if tool is in any of the mode's groups and respects any group options
-	for (const group of mode.groups) {
-		const groupName = getGroupName(group)
-		const options = getGroupOptions(group)
+	for (const groupEntry of mode.groups) {
+		const groupName = getGroupName(groupEntry)
+		const options = getGroupOptions(groupEntry)
 
 		const groupConfig = TOOL_GROUPS[groupName]
 

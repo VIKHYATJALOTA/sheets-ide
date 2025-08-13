@@ -6,9 +6,7 @@ import fs from "fs/promises"
 import * as vscode from "vscode"
 import { z, ZodError } from "zod"
 
-import { globalSettingsSchema } from "@roo-code/types"
-import { TelemetryService } from "@roo-code/telemetry"
-
+import { globalSettingsSchema } from "../../shared/types.ts"
 import { ProviderSettingsManager, providerProfilesSchema } from "./ProviderSettingsManager"
 import { ContextProxy } from "./ContextProxy"
 import { CustomModesManager } from "./CustomModesManager"
